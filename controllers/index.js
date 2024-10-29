@@ -62,29 +62,31 @@ const getAllUsers = async (req, res) => {
 const createUser = async (req, res) => {
   try {
     const usersArr = await mongodb.getDb().db().collection("users").find();
-    const users = usersArr.toArray().then((lists) => {});
-
-    for (let i = 0; i < users.length; i++) {
-      if (users[i].userName == req.body.userName) {
-        console.log(i);
-        res.status(500).json("username is already in use");
-
-        return;
+    const users = usersArr.toArray().then((lists) => {
+      for (let i = 0; i < lists.length; i++) {
+        if (lists[i].userName == req.body.userName) {
+          console.log(i);
+          throw new Error("username is already in use");
+        }
       }
-    }
-    const user = {
-      userName: req.body.userName,
-      password: req.body.password,
-      posts: [],
-    };
+    });
+    try {
+      const user = {
+        userName: req.body.userName,
+        password: req.body.password,
+        posts: [],
+      };
 
-    const response = await mongodb
-      .getDb()
-      .db()
-      .collection("users")
-      .insertOne(user);
-    if (response.acknowledged) {
-      res.status(201).json(response);
+      const response = await mongodb
+        .getDb()
+        .db()
+        .collection("users")
+        .insertOne(user);
+      if (response.acknowledged) {
+        res.status(201).json(response);
+      }
+    } catch (error) {
+      res.status(500).json(error);
     }
   } catch (error) {
     res.status(500).json(error);
